@@ -6,28 +6,35 @@
 
 **核心價值主張：** 將複雜的統計運算和機器學習能力封裝為標準化MCP服務，讓AI應用能夠無縫整合專業級的數據科學工具鏈。
 
+## 2025年技術更新說明
+
+**重要更新：** 基於最新的FastAPI-MCP官方套件，本專案將採用零配置整合方案，大幅簡化MCP協議實作複雜度，提升開發效率與維護性。
+
 ## 技術架構與規格設計
 
 ### MCP協議整合架構
 
-**協議版本：** Model Context Protocol 2025-06-18 最新規範
+**協議版本：** Model Context Protocol 2025最新規範
 
-**核心架構模式：**
+**核心架構模式（2025年官方套件）：**
 ```python
-# FastAPI + MCP 整合範例
+# 使用官方FastAPI-MCP套件的簡化整合
 from fastapi import FastAPI
 from fastapi_mcp import FastApiMCP
 
 app = FastAPI(title="統計分析MCP Server", version="1.0.0")
+
+# 零配置MCP整合
 mcp = FastApiMCP(app)
 
 # 自動將FastAPI端點轉換為MCP工具
-@app.post("/statistics/hypothesis-test")
+@app.post("/statistics/hypothesis-test", operation_id="hypothesis_test")
 async def run_hypothesis_test(request: HypothesisTestRequest):
     """統計假設檢定服務 - 自動註冊為MCP工具"""
     return await statistical_engine.perform_test(request)
 
-mcp.mount()  # 在 /mcp 端點提供MCP服務
+# 使用最新HTTP transport (推薦)
+mcp.mount_http()  # 支援Streamable HTTP規範
 ```
 
 **MCP服務類型設計：**
@@ -35,10 +42,11 @@ mcp.mount()  # 在 /mcp 端點提供MCP服務
 - **Resources（資源）**: 資料集、模型檔案、分析報告存取
 - **Prompts（提示範本）**: 統計分析指引、實驗設計模板
 
-**通訊協定選擇：**
-- **開發環境**: STDIO transport（快速原型開發）
-- **生產環境**: HTTP with Streamable transport（2025新增功能）
-- **認證機制**: OAuth 2.1 with PKCE（強制性安全要求）
+**通訊協定選擇（2025年最佳實踐）：**
+- **推薦方案**: HTTP with Streamable transport（官方推薦）
+- **向下相容**: SSE transport（Server-Sent Events）
+- **開發測試**: MCP Inspector工具整合
+- **認證機制**: OAuth 2.1 with PKCE + Token passthrough
 
 ### 資料庫架構設計
 
@@ -75,32 +83,32 @@ class DataService:
 
 ### Docker容器化策略
 
-**多階段構建最佳化：**
+**多階段構建最佳化（2025年最佳實踐）：**
 ```dockerfile
-# 階段1：依賴安裝
-FROM python:3.11-slim AS builder
-RUN apt-get update && apt-get install -y build-essential gcc
-WORKDIR /app
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# 階段1：Poetry依賴管理
+FROM python:3.11-slim AS requirements-stage
+WORKDIR /tmp
+RUN pip install poetry
+COPY ./pyproject.toml ./poetry.lock* /tmp/
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
-# 階段2：生產執行環境  
+# 階段2：生產執行環境
 FROM python:3.11-slim AS runtime
 RUN addgroup --gid 1001 --system nonroot && \
     adduser --uid 1001 --system --group nonroot
-USER nonroot:nonroot
 
-ENV VIRTUAL_ENV=/opt/venv PATH="/opt/venv/bin:$PATH"
-COPY --from=builder --chown=nonroot:nonroot /opt/venv /opt/venv
-COPY --chown=nonroot:nonroot . /app
-WORKDIR /app
+WORKDIR /code
+COPY --from=requirements-stage /tmp/requirements.txt /code/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+COPY --chown=nonroot:nonroot ./app /code/app
+USER nonroot:nonroot
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s \
     CMD curl -f http://localhost:8000/health || exit 1
 
-CMD ["gunicorn", "main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker"]
+# 使用FastAPI CLI執行（推薦）
+CMD ["fastapi", "run", "app/main.py", "--port", "8000", "--workers", "4"]
 ```
 
 **容器最佳化效果：**
@@ -305,15 +313,15 @@ async def analyze_experiment(request: ExperimentAnalysisRequest):
 
 ### 程式語言與框架
 
-**主要技術棧：**
+**主要技術棧（2025年更新）：**
 - **Python 3.11**: 最新穩定版本，效能與安全性最佳化
-- **FastAPI 0.104+**: 現代非同步Web框架，自動API文件生成
-- **FastAPI-MCP**: 零配置MCP整合，保留原生FastAPI功能
+- **FastAPI 0.115+**: 現代非同步Web框架，自動API文件生成
+- **fastapi-mcp**: 官方MCP整合套件，零配置部署
 - **Pydantic v2**: 資料驗證與序列化，效能提升顯著
 
 **選擇理由分析：**
 1. **FastAPI優勢**: 高效能（與NodeJS相當）、型別提示支援、自動OpenAPI文件
-2. **MCP整合**: FastAPI-MCP提供無縫整合，ASGI傳輸效率優於HTTP
+2. **MCP整合**: 官方fastapi-mcp套件提供零配置整合，支援最新Streamable HTTP規範
 3. **生態系統**: 豐富的統計/ML函式庫（NumPy、SciPy、scikit-learn、PyMC）
 
 ### 開發工具推薦
@@ -322,22 +330,23 @@ async def analyze_experiment(request: ExperimentAnalysisRequest):
 ```toml
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = "^0.104.0"
+fastapi = "^0.115.0"
+fastapi-mcp = "^0.3.0"    # 官方MCP整合套件
 uvicorn = {extras = ["standard"], version = "^0.24.0"}
 sqlalchemy = "^2.0.0"
 asyncpg = "^0.29.0"
 redis = "^5.0.0"
-numpy = "^1.25.0"
+numpy = "^1.26.0"
 pandas = "^2.1.0"
-scikit-learn = "^1.3.0"
-pymc = "^5.8.0"
+scikit-learn = "^1.4.0"
+pymc = "^5.10.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
 pytest-asyncio = "^0.21.0"
-ruff = "^0.1.8"          # 取代Black、isort、flake8
-mypy = "^1.6.0"
-pre-commit = "^3.5.0"
+ruff = "^0.1.15"          # 取代Black、isort、flake8
+mypy = "^1.8.0"
+pre-commit = "^3.6.0"
 ```
 
 **程式碼品質控制：**
