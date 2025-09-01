@@ -1,5 +1,3 @@
-from typing import Union
-
 import numpy as np
 from scipy import stats
 
@@ -15,7 +13,7 @@ class StatisticsService:
 
     @staticmethod
     def calculate_descriptive_statistics(
-        data: list[Union[int, float]], confidence_level: float = 0.95
+        data: list[int | float], confidence_level: float = 0.95
     ) -> DescriptiveStatistics:
         """計算描述性統計"""
 

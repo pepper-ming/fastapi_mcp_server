@@ -58,7 +58,7 @@ async def health_check() -> dict[str, str]:
 app.include_router(statistics_router)
 
 # 掛載 MCP 服務（使用最新 HTTP transport）
-mcp.mount_http()
+mcp.mount()
 
 if __name__ == "__main__":
     import uvicorn

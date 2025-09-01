@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  fastapi-mcp:
+    build: .
+    container_name: fastapi-mcp-server
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=false
+      - DATABASE_URL=sqlite:///./data/app.db
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - app_data:/code/data
+      - app_logs:/code/logs
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - mcp_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - mcp_network
+    command: redis-server --appendonly yes
+
+volumes:
+  app_data:
+  app_logs:
+  redis_data:
+
+networks:
+  mcp_network:
+    driver: bridge

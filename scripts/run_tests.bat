@@ -1,0 +1,16 @@
+@echo off
+echo 執行程式碼品質檢查...
+
+echo 執行 Ruff 程式碼檢查...
+poetry run ruff check .
+
+echo 執行 Ruff 程式碼格式化...
+poetry run ruff format .
+
+echo 執行 MyPy 類型檢查...
+poetry run mypy app/
+
+echo 執行單元測試...
+poetry run pytest tests/ -v --cov=app --cov-report=term-missing
+
+echo 所有檢查完成！

@@ -1,12 +1,10 @@
-from typing import Optional, Union
-
 from pydantic import BaseModel, Field
 
 
 class StatisticalDataRequest(BaseModel):
     """統計資料請求模型"""
 
-    data: list[Union[int, float]] = Field(
+    data: list[int | float] = Field(
         ...,
         description="數值資料陣列",
         min_length=1,
@@ -24,7 +22,7 @@ class DescriptiveStatistics(BaseModel):
     count: int = Field(description="資料點數量")
     mean: float = Field(description="算術平均數")
     median: float = Field(description="中位數")
-    mode: Optional[float] = Field(description="眾數（如存在）")
+    mode: float | None = Field(description="眾數（如存在）")
     std_dev: float = Field(description="標準差")
     variance: float = Field(description="變異數")
     min_value: float = Field(description="最小值")
@@ -45,9 +43,7 @@ class DescriptiveStatistics(BaseModel):
 class HypothesisTestRequest(BaseModel):
     """假設檢定請求模型"""
 
-    sample_data: list[Union[int, float]] = Field(
-        ..., description="樣本資料", min_length=2
-    )
+    sample_data: list[int | float] = Field(..., description="樣本資料", min_length=2)
 
     test_type: str = Field(
         default="one_sample_t", description="檢定類型", examples=["one_sample_t"]
@@ -73,8 +69,8 @@ class HypothesisTestResult(BaseModel):
 
     test_statistic: float = Field(description="檢定統計量")
     p_value: float = Field(description="p 值")
-    critical_value: Union[float, list[float]] = Field(description="臨界值")
-    degrees_of_freedom: Optional[int] = Field(description="自由度")
+    critical_value: float | list[float] = Field(description="臨界值")
+    degrees_of_freedom: int | None = Field(description="自由度")
     reject_null: bool = Field(description="是否拒絕虛無假設")
     conclusion: str = Field(description="檢定結論")
-    effect_size: Optional[float] = Field(description="效應量")
+    effect_size: float | None = Field(description="效應量")

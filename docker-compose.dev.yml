@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  fastapi-mcp:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: fastapi-mcp-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=true
+      - RELOAD=true
+    volumes:
+      - .:/code
+      - dev_logs:/code/logs
+    depends_on:
+      - redis
+    networks:
+      - mcp_dev_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-redis-dev
+    ports:
+      - "6379:6379"
+    networks:
+      - mcp_dev_network
+
+volumes:
+  dev_logs:
+
+networks:
+  mcp_dev_network:
+    driver: bridge

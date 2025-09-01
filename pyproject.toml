@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "統計分析與機器學習推論的 MCP Server"
 authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
+packages = [{include = "app"}]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
@@ -15,8 +16,10 @@ pydantic-settings = "2.5.2"
 sqlalchemy = "2.0.23"
 asyncpg = "0.29.0"
 redis = "5.0.1"
+numpy = "^1.26.0"
 pandas = "^2.3.2"
 scikit-learn = "^1.7.1"
+scipy = "^1.11.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "7.4.0"
@@ -30,17 +33,17 @@ httpx = "0.27.0"
 [tool.ruff]
 line-length = 88
 target-version = "py311"
-select = ["E", "F", "I", "N", "W"]
+select = ["E", "F", "I", "N", "W", "UP"]
 
 [tool.ruff.isort]
 known-first-party = ["app"]
 
 [tool.mypy]
 python_version = "3.11"
-strict = false
-warn_return_any = false
+strict = true
+warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = false
+disallow_untyped_defs = true
 plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
