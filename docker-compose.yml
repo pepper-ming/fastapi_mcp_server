@@ -1,24 +1,30 @@
 version: '3.8'
 
 services:
-  fastapi-mcp:
-    build: .
-    container_name: fastapi-mcp-server
-    ports:
-      - "8000:8000"
+  # TimescaleDB 主資料庫
+  timescaledb:
+    image: timescale/timescaledb:latest-pg17
+    container_name: fastapi-mcp-timescaledb
     environment:
-      - DEBUG=false
-      - DATABASE_URL=sqlite:///./data/app.db
-      - REDIS_URL=redis://redis:6379/0
+      - POSTGRES_DB=fastapi_mcp
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
-      - app_data:/code/data
-      - app_logs:/code/logs
-    depends_on:
-      - redis
-    restart: unless-stopped
+      - timescaledb_data:/var/lib/postgresql/data/pgdata
+      - ./scripts/init-timescaledb.sql:/docker-entrypoint-initdb.d/init-timescaledb.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fastapi_mcp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - mcp_network
+    restart: unless-stopped
 
+  # Redis 快取服務
   redis:
     image: redis:7-alpine
     container_name: mcp-redis
@@ -29,12 +35,42 @@ services:
     restart: unless-stopped
     networks:
       - mcp_network
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass redis_password
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # FastAPI 應用服務
+  fastapi-mcp:
+    build: .
+    container_name: fastapi-mcp-server
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=false
+      - DATABASE_URL=postgresql://postgres:password@timescaledb:5432/fastapi_mcp
+      - REDIS_URL=redis://:redis_password@redis:6379/0
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      - app_data:/code/data
+      - app_logs:/code/logs
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - mcp_network
 
 volumes:
   app_data:
   app_logs:
   redis_data:
+  timescaledb_data:
 
 networks:
   mcp_network:
