@@ -31,8 +31,8 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 # 複製應用程式程式碼
 COPY --chown=nonroot:nonroot ./app /code/app
 
-# 建立日誌目錄
-RUN mkdir -p /code/logs && chown nonroot:nonroot /code/logs
+# 建立日誌和模型目錄
+RUN mkdir -p /code/logs /code/models && chown -R nonroot:nonroot /code/logs /code/models
 
 # 切換到非 root 使用者
 USER nonroot:nonroot

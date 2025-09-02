@@ -6,12 +6,14 @@ from app.models.statistics import (
     HypothesisTestRequest,
     HypothesisTestResult,
 )
+from app.utils.cache_decorators import cache_analysis_result
 
 
 class StatisticsService:
     """統計分析服務類別"""
 
     @staticmethod
+    @cache_analysis_result("descriptive_stats", ttl_seconds=3600, cache_key_fields=["data", "confidence_level"])
     def calculate_descriptive_statistics(
         data: list[int | float], confidence_level: float = 0.95
     ) -> DescriptiveStatistics:
@@ -68,6 +70,7 @@ class StatisticsService:
         )
 
     @staticmethod
+    @cache_analysis_result("hypothesis_test", ttl_seconds=3600)
     def perform_hypothesis_test(request: HypothesisTestRequest) -> HypothesisTestResult:
         """執行假設檢定"""
 

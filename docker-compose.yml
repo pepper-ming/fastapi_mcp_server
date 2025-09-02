@@ -57,6 +57,7 @@ services:
     volumes:
       - app_data:/code/data
       - app_logs:/code/logs
+      - app_models:/code/models
     depends_on:
       timescaledb:
         condition: service_healthy
@@ -69,6 +70,7 @@ services:
 volumes:
   app_data:
   app_logs:
+  app_models:
   redis_data:
   timescaledb_data:
 

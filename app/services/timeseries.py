@@ -13,12 +13,14 @@ from app.models.timeseries import (
     ForecastResult,
     TimeSeriesData,
 )
+from app.utils.cache_decorators import cache_forecast_result
 
 
 class TimeSeriesService:
     """時間序列分析服務"""
 
     @staticmethod
+    @cache_forecast_result(ttl_seconds=1800)
     def forecast_timeseries(request: ForecastRequest) -> ForecastResult:
         """時間序列預測"""
 

@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:2.14-pg16
+    container_name: mcp-timescaledb
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=fastapi_mcp
+      - POSTGRES_USER=mcp_user
+      - POSTGRES_PASSWORD=mcp_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+      - ./scripts/init_timescale.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - mcp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mcp_user -d fastapi_mcp"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - mcp_network
+    command: redis-server --appendonly yes
+
+volumes:
+  timescale_data:
+  redis_data:
+
+networks:
+  mcp_network:
+    driver: bridge

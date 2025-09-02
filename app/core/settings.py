@@ -23,7 +23,8 @@ class Settings(BaseSettings):
 
     # 資料庫設定
     database_url: str = Field(
-        default="sqlite:///./app.db", description="資料庫連線 URL"
+        default="postgresql+asyncpg://mcp_user:mcp_password@localhost:5432/fastapi_mcp",
+        description="資料庫連線 URL"
     )
     database_echo: bool = False
 

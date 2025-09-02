@@ -28,7 +28,7 @@ class TimeSeriesData(Base):
     timestamp = Column(DateTime(timezone=True), primary_key=True)
     series_id = Column(String(100), primary_key=True, index=True)
     value = Column(Float, nullable=False)
-    metadata = Column(JSONB)
+    meta_data = Column(JSONB)
 
 
 class ModelTrainingLog(Base):
@@ -57,7 +57,7 @@ class StatisticsData(Base):
     data_type = Column(String(50), nullable=False, index=True)
     source_name = Column(String(100), nullable=False, index=True)
     metrics = Column(JSONB, nullable=False)
-    metadata = Column(JSONB, default={})
+    meta_data = Column(JSONB, default={})
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
